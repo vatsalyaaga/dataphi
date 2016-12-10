@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<a href="./index.html">New Patient</a>
+<a href="directory.php">Patient Directory</a>
+<h2>New Record</h2>
+<p>First Name</p>
+<input id="fname" type="text" onkeyup="validate(this)"><br>
+<p>Last Name</p>
+<input id="lname" type="text" onkeyup="validate(this)"><br>
+<p>Date Of Birth</p>
+<input type="date" id="dob"  onchange="validate(this)">
+<p>Age</p>
+<input id="age" type="number" maxlength="3" onkeyup="validate(this)"><br>
+<p>Mobile</p>
+<input id="mobile" type="number" maxlength="10" onkeyup="validate(this)"><br>
+<p>Gender</p>
+<select id="gender" onchange="validate(this)">
+    <option default selected>Select Gender</option>
+    <option value="male">Male</option>
+    <option value="female">Female</option>
+</select>
+<p>Extra Info</p>
+<textarea id="extra" onkeyup="validate(this)"></textarea><br>
+<input type="button" value="Submit" onclick="send()"><br>
+<span id="response"></span>
+</body>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+<script>
+    function validate(element) {
+        var id = $(element).attr('id');
+        var value = $(element).val();
+//        console.log($("#error_"+id));
+        if( $("#error_"+id) ){
+            $("#error_"+id).remove()
+        }
+        if( value == "" && id != "extra" ){
+            $('<p id="error_'+id+'" style="color:' +
+                        ' red; font-size: small;">' +
+                        'Field cannot be left blank.' +
+                        '.</p>').insertBefore($(element));
+            return false;
+        }
+        if( id == 'fname' || id == "lname" ){
+            if( !(/^[a-zA-Z]*$/g).test(value) ){
+                $('<p id="error_'+id+'" style="color:' +
+                        ' red; font-size: small;">' +
+                        'Name should contain only alphabets' +
+                        '.</p>').insertBefore($(element));
+                return false
+            }
+        }
+        if( id == 'dob' ){
+            if( Date.parse(value) > Date.now() ){
+                $('<p id="error_'+id+'"' +
+                        'style="color: red; ' +
+                        'font-size: small;' +
+                        '">Date of birth cannot be greater than today.</p>').insertBefore($(element));
+                return false
+            }
+            else{
+                var input_year = new Date(value).getUTCFullYear()
+                var current_year = new Date().getUTCFullYear()
+                $("#age").val(current_year-input_year)
+            }
+        }
+        if( id == 'mobile' ){
+            if( (String(value)).length != 10 ){
+                $('<p id="error_'+id+'"' +
+                        'style="color: red; ' +
+                        'font-size: small;' +
+                        '">Mobile number should be 10 digits long.</p>').insertBefore($(element));
+                return false
+            }
+        }
+        if( id == 'age' ){
+            if( (String(value)).length > 3 ){
+                $('<p id="error_'+id+'"' +
+                        'style="color: red; ' +
+                        'font-size: small;' +
+                        '">Age is obsolete.</p>').insertBefore($(element));
+                return false
+            }
+        }
+        if( id == 'gender' && (value != "male" && value != "female") ){
+            console.log(id, value)
+            $('<p id="error_'+id+'"' +
+                        'style="color: red; ' +
+                        'font-size: small;' +
+                        '">Please select a gender.</p>').insertBefore($(element));
+            return false
+        }
+        return true
+    }
+    function send() {
+        if( validate($("#fname")) && validate($("#lname"))  && validate($("#dob"))  && validate($("#age"))  &&
+                validate($("#mobile"))   && validate($("#gender")) && validate($("#extra"))  ){
+            var fname = $("#fname").val();
+            var lname = $("#lname").val();
+            var dob = $("#dob").val();
+            var age = $("#age").val();
+            var mobile = $("#mobile").val();
+            var gender = $("#gender").val();
+            var extra = $("#extra").val();
+            var data = {
+                fname: fname,
+                lname: lname,
+                dob: dob,
+                age: age,
+                mobile: mobile,
+                gender: gender,
+                extra: extra
+            };
+//            var dataToSend = JSON.stringify(data);
+            $.ajax({
+                url: './backend.php/',
+                type: 'POST',
+                data: data,
+                dataType: 'json',
+                success: function (Response) {
+                    if( Response == "success" ){
+                        $("#response").text("Data inserted successfully.");
+                        var fname = $("#fname").val();
+                        $("#lname").val("");
+                        $("#dob").val("");
+                        $("#age").val("");
+                        $("#mobile").val("");
+                        $("#gender").val("");
+                        $("#extra").val("");
+                    }
+                    else{
+                        $("#response").text("Error inserting data.");
+                    }
+                },
+                error: function () {
+                    $("#response").text("Error inserting data.");
+                }
+            });
+        }
+        else{
+            $("#response").text("Please fix all the errors.");
+        }
+        event.preventDefault();
+    }
+</script>
+</html>
